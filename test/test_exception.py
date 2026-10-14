@@ -1,6 +1,10 @@
 import pytest
 
 from config import Config
+from internal.core.tools.builtin_tools import (
+    BuiltinCategoryManager,
+    BuiltinProviderManager,
+)
 from internal.exception import (
     FailException,
     ForbiddenException,
@@ -8,6 +12,7 @@ from internal.exception import (
     UnauthorizedException,
     ValidateException,
 )
+from internal.extension import migrate
 from internal.pkg.response import HttpCode
 from internal.server.http import Http
 
@@ -37,7 +42,13 @@ class ErrorRouter:
 def create_app(debug: bool):
     config = Config()
     config.DEBUG = debug
-    app = Http(ErrorRouter(), config)
+    app = Http(
+        ErrorRouter(),
+        config,
+        migrate,
+        BuiltinProviderManager(),
+        BuiltinCategoryManager(),
+    )
     app.config.update(TESTING=False, PROPAGATE_EXCEPTIONS=debug)
     return app
 

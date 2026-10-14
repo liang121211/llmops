@@ -1,0 +1,22 @@
+name: google_serper
+label: 谷歌搜索工具
+description: 这是一个低成本的谷歌搜索工具，当你需要搜索内容时，可以使用该工具，该工具输入的是一个查询语句。
+# SERPER_API_KEY 从 .env 读取，不写进配置文件
+params:
+  - name: num_results
+    generate_name: num_results
+    type: number
+    desc: 每次检索返回的结果条数
+    required: false
+    default: 5
+    min: 1
+    max: 10
+  - name: language
+    generate_name: language
+    type: select
+    desc: 检索结果的界面语言
+    required: false
+    default: zh-CN
+    options:
+      - zh-CN
+      - en-US

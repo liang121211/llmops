@@ -1,5 +1,5 @@
-from flask_sqlalchemy import SQLAlchemy
+from pkg.sqlalchemy.sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
 
-__all__ = ["db"]
+__all__ = ["SQLAlchemy", "db"]

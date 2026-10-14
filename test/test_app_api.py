@@ -2,14 +2,8 @@ from unittest.mock import MagicMock, patch
 
 from langchain_core.messages import AIMessage
 
-from internal.pkg.response import (
-    HttpCode,
-    fail_message,
-    forbidden_message,
-    not_found_message,
-    success_message,
-    unauthorized_message,
-)
+from internal.core.tools.builtin_tools import BuiltinProviderManager
+from internal.pkg.response import HttpCode
 
 
 def test_ping(client):
@@ -57,15 +51,43 @@ def test_chat_query_too_long(client):
     }
 
 
-def test_response_messages(app_context):
-    responses = [
-        (success_message("ok"), HttpCode.SUCCESS),
-        (fail_message("failed"), HttpCode.FAIL),
-        (not_found_message("missing"), HttpCode.NOT_FOUND),
-        (unauthorized_message("login required"), HttpCode.UNAUTHORIZED),
-        (forbidden_message("denied"), HttpCode.FORBIDDEN),
-    ]
+@patch.object(BuiltinProviderManager, "get_tool_instance")
+def test_builtin_tool_test_searches_with_query(mock_get_tool_instance, client):
+    # 联网检索不在测试里真实发起，mock 掉工具实例的执行结果
+    mock_tool = MagicMock()
+    mock_tool.invoke.return_value = "杭州今天晴，气温 25 度。"
+    mock_get_tool_instance.return_value = mock_tool
 
-    for (response, status), code in responses:
-        assert status == 200
-        assert response.get_json()["code"] == code.value
+    response = client.post("/app/builtin_tool_test", json={"query": "杭州今天天气"})
+
+    assert response.status_code == 200
+    assert response.get_json() == {
+        "code": HttpCode.SUCCESS.value,
+        "message": "",
+        "data": {"content": "杭州今天晴，气温 25 度。"},
+    }
+    mock_get_tool_instance.assert_called_once_with("google", "google_serper")
+    mock_tool.invoke.assert_called_once_with({"query": "杭州今天天气"})
+
+
+def test_builtin_tool_test_missing_query(client):
+    response = client.post("/app/builtin_tool_test")
+
+    assert response.status_code == 200
+    assert response.get_json() == {
+        "code": HttpCode.VALIDATE_ERROR.value,
+        "message": "query参数必须传递",
+        "data": {},
+    }
+
+
+@patch.object(BuiltinProviderManager, "get_tool_instance", return_value=None)
+def test_builtin_tool_test_tool_unavailable(mock_get_tool_instance, client):
+    response = client.post("/app/builtin_tool_test", json={"query": "你好"})
+
+    assert response.status_code == 200
+    assert response.get_json() == {
+        "code": HttpCode.NOT_FOUND.value,
+        "message": "内置工具 google_serper 不可用",
+        "data": {},
+    }

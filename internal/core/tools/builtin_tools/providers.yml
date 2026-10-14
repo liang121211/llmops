@@ -1,0 +1,14 @@
+- name: google
+  label: Google
+  description: 谷歌服务提供商，涵盖了谷歌搜索等工具。
+  icon: icon.svg
+  background: "#E5E7EB"
+  category: search
+  created_at: 1722498386
+- name: other_tool
+  label: 其它工具
+  description: 示例与实验性质的工具提供商，用于验证新增服务商的接入流程。
+  icon: icon.svg
+  background: "#F3F4F6"
+  category: other
+  created_at: 1722498386
