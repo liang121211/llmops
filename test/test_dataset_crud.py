@@ -3,7 +3,10 @@ import uuid
 import pytest
 
 from internal.pkg.response import HttpCode
-from internal.service.dataset_service import DEFAULT_DATASET_DESCRIPTION_FORMATTER
+from internal.service.dataset_service import (
+    DEFAULT_DATASET_DESCRIPTION_FORMATTER,
+    DatasetService,
+)
 
 
 @pytest.fixture
@@ -135,15 +138,26 @@ def test_update_dataset_not_found(client, clean_datasets):
     assert body["code"] == HttpCode.NOT_FOUND.value
 
 
-def test_delete_dataset_removes_record(created_dataset, client):
+def test_delete_dataset_submits_async_task(created_dataset, client, monkeypatch):
+    """删除已改为异步任务：接口只提交任务，知识库行等任务执行时才清理。"""
+    submitted = []
+
+    # autoparams 包装后真实类在 __wrapped__，patch 必须打在真实类上
+    def _fake_trigger(self_service, dataset_id):
+        submitted.append(str(dataset_id))
+
+    monkeypatch.setattr(DatasetService.__wrapped__, "trigger_delete", _fake_trigger)
+
     dataset_id = created_dataset["id"]
     body = client.delete(f"/datasets/{dataset_id}").get_json()
 
     assert body["code"] == HttpCode.SUCCESS.value
     assert body["data"]["id"] == dataset_id
+    assert submitted == [dataset_id]
 
+    # 任务尚未执行，知识库记录仍然存在
     get_body = client.get(f"/datasets/{dataset_id}").get_json()
-    assert get_body["code"] == HttpCode.NOT_FOUND.value
+    assert get_body["code"] == HttpCode.SUCCESS.value
 
 
 def test_delete_dataset_not_found(client, clean_datasets):

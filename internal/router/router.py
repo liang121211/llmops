@@ -9,6 +9,7 @@ from internal.handler.builtin_handler import BuiltinHandler
 from internal.handler.celery_handler import CeleryHandler
 from internal.handler.dataset_handler import DatasetHandler
 from internal.handler.document_handler import DocumentHandler
+from internal.handler.keyword_handler import KeywordHandler
 from internal.handler.upload_file_handler import UploadFileHandler
 
 
@@ -24,6 +25,7 @@ class Router:
     celery_handler: CeleryHandler
     dataset_handler: DatasetHandler
     document_handler: DocumentHandler
+    keyword_handler: KeywordHandler
 
     def register_router(self, app: Flask):
         bp = Blueprint("app", __name__)
@@ -162,6 +164,94 @@ class Router:
         bp.add_url_rule(
             "/datasets/<uuid:dataset_id>/documents",
             view_func=self.dataset_handler.create_documents,
+            methods=["POST"],
+        )
+        # 知识库文档：获取批次处理状态
+        bp.add_url_rule(
+            "/datasets/<uuid:dataset_id>/documents/batch/<string:batch_id>",
+            view_func=self.dataset_handler.get_batch_status,
+            methods=["GET"],
+        )
+        # 知识库文档：分页查询文档列表（与创建共用资源路径，用方法区分）
+        bp.add_url_rule(
+            "/datasets/<uuid:dataset_id>/documents",
+            view_func=self.dataset_handler.get_documents,
+            methods=["GET"],
+        )
+        # 知识库文档：根据 ID 查询单个文档
+        bp.add_url_rule(
+            "/datasets/<uuid:dataset_id>/documents/<uuid:document_id>",
+            view_func=self.dataset_handler.get_document,
+            methods=["GET"],
+        )
+        # 知识库文档：修改文档（目前仅支持标题）
+        bp.add_url_rule(
+            "/datasets/<uuid:dataset_id>/documents/<uuid:document_id>",
+            view_func=self.dataset_handler.update_document,
+            methods=["PUT"],
+        )
+        # 知识库文档：删除（与查询/修改共用路径，用方法区分）
+        bp.add_url_rule(
+            "/datasets/<uuid:dataset_id>/documents/<uuid:document_id>",
+            view_func=self.dataset_handler.delete_document,
+            methods=["DELETE"],
+        )
+        # 知识库文档：禁用
+        bp.add_url_rule(
+            "/datasets/<uuid:dataset_id>/documents/<uuid:document_id>/disable",
+            view_func=self.dataset_handler.disable_document,
+            methods=["PUT"],
+        )
+        # 知识库文档：启用
+        bp.add_url_rule(
+            "/datasets/<uuid:dataset_id>/documents/<uuid:document_id>/enable",
+            view_func=self.dataset_handler.enable_document,
+            methods=["PUT"],
+        )
+
+        # 知识库片段：分页列表与新增共用资源路径
+        bp.add_url_rule(
+            "/datasets/<uuid:dataset_id>/documents/<uuid:document_id>/segments",
+            view_func=self.dataset_handler.get_segments,
+            methods=["GET"],
+        )
+        bp.add_url_rule(
+            "/datasets/<uuid:dataset_id>/documents/<uuid:document_id>/segments",
+            view_func=self.dataset_handler.create_segment,
+            methods=["POST"],
+        )
+        # 知识库片段：单条查询/修改/删除
+        bp.add_url_rule(
+            "/datasets/<uuid:dataset_id>/documents/<uuid:document_id>/segments/<uuid:segment_id>",
+            view_func=self.dataset_handler.get_segment,
+            methods=["GET"],
+        )
+        bp.add_url_rule(
+            "/datasets/<uuid:dataset_id>/documents/<uuid:document_id>/segments/<uuid:segment_id>",
+            view_func=self.dataset_handler.update_segment,
+            methods=["PUT"],
+        )
+        bp.add_url_rule(
+            "/datasets/<uuid:dataset_id>/documents/<uuid:document_id>/segments/<uuid:segment_id>",
+            view_func=self.dataset_handler.delete_segment,
+            methods=["DELETE"],
+        )
+        # 知识库片段：禁用/启用
+        bp.add_url_rule(
+            "/datasets/<uuid:dataset_id>/documents/<uuid:document_id>/segments/<uuid:segment_id>/disable",
+            view_func=self.dataset_handler.disable_segment,
+            methods=["PUT"],
+        )
+        bp.add_url_rule(
+            "/datasets/<uuid:dataset_id>/documents/<uuid:document_id>/segments/<uuid:segment_id>/enable",
+            view_func=self.dataset_handler.enable_segment,
+            methods=["PUT"],
+        )
+
+        # ── 关键词提取 ──────────────────────────────────────────────
+        bp.add_url_rule(
+            "/keywords/extract",
+            view_func=self.keyword_handler.extract,
             methods=["POST"],
         )
 

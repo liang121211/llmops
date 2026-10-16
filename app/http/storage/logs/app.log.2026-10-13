@@ -1,0 +1,75 @@
+[2026-10-13 21:13:24,010.010] builtin_category_manager.py -> init line:37 [INFO]: 插件分类加载完成：5 个
+[2026-10-13 21:13:24,026.026] builtin_provider_manager.py -> init line:25 [INFO]: 内置插件加载完成：google，分类 search，工具 2 个
+[2026-10-13 21:13:24,026.026] builtin_provider_manager.py -> init line:25 [INFO]: 内置插件加载完成：other_tool，分类 other，工具 0 个
+[2026-10-13 21:13:28,178.178] redis.py -> on_connection_error line:420 [ERROR]: Connection to Redis lost: Retry (0/20) now.
+[2026-10-13 21:13:30,228.228] redis.py -> on_connection_error line:420 [ERROR]: Connection to Redis lost: Retry (1/20) in 1.00 second.
+[2026-10-13 21:13:33,267.267] redis.py -> on_connection_error line:420 [ERROR]: Connection to Redis lost: Retry (2/20) in 1.00 second.
+[2026-10-13 21:13:36,318.318] redis.py -> on_connection_error line:420 [ERROR]: Connection to Redis lost: Retry (3/20) in 1.00 second.
+[2026-10-13 21:13:39,360.360] redis.py -> on_connection_error line:420 [ERROR]: Connection to Redis lost: Retry (4/20) in 1.00 second.
+[2026-10-13 21:13:42,406.406] redis.py -> on_connection_error line:420 [ERROR]: Connection to Redis lost: Retry (5/20) in 1.00 second.
+[2026-10-13 21:13:45,465.465] redis.py -> on_connection_error line:420 [ERROR]: Connection to Redis lost: Retry (6/20) in 1.00 second.
+[2026-10-13 21:13:48,510.510] redis.py -> on_connection_error line:420 [ERROR]: Connection to Redis lost: Retry (7/20) in 1.00 second.
+[2026-10-13 21:13:51,571.571] redis.py -> on_connection_error line:420 [ERROR]: Connection to Redis lost: Retry (8/20) in 1.00 second.
+[2026-10-13 21:13:54,624.624] redis.py -> on_connection_error line:420 [ERROR]: Connection to Redis lost: Retry (9/20) in 1.00 second.
+[2026-10-13 21:13:57,651.651] redis.py -> on_connection_error line:420 [ERROR]: Connection to Redis lost: Retry (10/20) in 1.00 second.
+[2026-10-13 21:14:00,709.709] redis.py -> on_connection_error line:420 [ERROR]: Connection to Redis lost: Retry (11/20) in 1.00 second.
+[2026-10-13 21:14:03,753.753] redis.py -> on_connection_error line:420 [ERROR]: Connection to Redis lost: Retry (12/20) in 1.00 second.
+[2026-10-13 21:14:06,783.783] redis.py -> on_connection_error line:420 [ERROR]: Connection to Redis lost: Retry (13/20) in 1.00 second.
+[2026-10-13 21:14:09,835.835] redis.py -> on_connection_error line:420 [ERROR]: Connection to Redis lost: Retry (14/20) in 1.00 second.
+[2026-10-13 21:14:12,881.881] redis.py -> on_connection_error line:420 [ERROR]: Connection to Redis lost: Retry (15/20) in 1.00 second.
+[2026-10-13 21:14:15,933.933] redis.py -> on_connection_error line:420 [ERROR]: Connection to Redis lost: Retry (16/20) in 1.00 second.
+[2026-10-13 21:14:18,969.969] redis.py -> on_connection_error line:420 [ERROR]: Connection to Redis lost: Retry (17/20) in 1.00 second.
+[2026-10-13 21:14:22,000.000] redis.py -> on_connection_error line:420 [ERROR]: Connection to Redis lost: Retry (18/20) in 1.00 second.
+[2026-10-13 21:14:25,050.050] redis.py -> on_connection_error line:420 [ERROR]: Connection to Redis lost: Retry (19/20) in 1.00 second.
+[2026-10-13 21:14:28,107.107] asynchronous.py -> reconnect_on_error line:354 [CRITICAL]: 
+Retry limit exceeded while trying to reconnect to the Celery result store
+backend. The Celery application must be restarted.
+
+[2026-10-13 21:17:31,930.930] builtin_category_manager.py -> init line:37 [INFO]: 插件分类加载完成：5 个
+[2026-10-13 21:17:31,945.945] builtin_provider_manager.py -> init line:25 [INFO]: 内置插件加载完成：google，分类 search，工具 2 个
+[2026-10-13 21:17:31,952.952] builtin_provider_manager.py -> init line:25 [INFO]: 内置插件加载完成：other_tool，分类 other，工具 0 个
+[2026-10-13 21:17:34,004.004] app.py -> <module> line:103 [WARNING]: 嵌入模型预下载任务提交失败（Redis 可能未启动）：Error 10061 connecting to 127.0.0.1:6379. 由于目标计算机积极拒绝，无法连接。.
+[2026-10-13 21:17:34,023.023] _internal.py -> _log line:97 [INFO]: [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+[2026-10-13 21:17:34,023.023] _internal.py -> _log line:97 [INFO]: [33mPress CTRL+C to quit[0m
+[2026-10-13 21:17:34,024.024] _internal.py -> _log line:97 [INFO]:  * Restarting with stat
+[2026-10-13 21:17:37,547.547] builtin_category_manager.py -> init line:37 [INFO]: 插件分类加载完成：5 个
+[2026-10-13 21:17:37,562.562] builtin_provider_manager.py -> init line:25 [INFO]: 内置插件加载完成：google，分类 search，工具 2 个
+[2026-10-13 21:17:37,562.562] builtin_provider_manager.py -> init line:25 [INFO]: 内置插件加载完成：other_tool，分类 other，工具 0 个
+[2026-10-13 21:17:39,607.607] app.py -> <module> line:103 [WARNING]: 嵌入模型预下载任务提交失败（Redis 可能未启动）：Error 10061 connecting to 127.0.0.1:6379. 由于目标计算机积极拒绝，无法连接。.
+[2026-10-13 21:17:39,622.622] _internal.py -> _log line:97 [WARNING]:  * Debugger is active!
+[2026-10-13 21:17:39,627.627] _internal.py -> _log line:97 [INFO]:  * Debugger PIN: 197-459-823
+[2026-10-13 21:17:49,574.574] _internal.py -> _log line:97 [INFO]: 127.0.0.1 - - [13/Oct/2026 21:17:49] "[35m[1mPOST /builtin_tool_test HTTP/1.1[0m" 500 -
+[2026-10-13 21:18:45,853.853] builtin_category_manager.py -> init line:37 [INFO]: 插件分类加载完成：5 个
+[2026-10-13 21:18:45,874.874] builtin_provider_manager.py -> init line:25 [INFO]: 内置插件加载完成：google，分类 search，工具 2 个
+[2026-10-13 21:18:45,874.874] builtin_provider_manager.py -> init line:25 [INFO]: 内置插件加载完成：other_tool，分类 other，工具 0 个
+[2026-10-13 21:18:47,932.932] app.py -> <module> line:103 [WARNING]: 嵌入模型预下载任务提交失败（Redis 可能未启动）：Error 10061 connecting to 127.0.0.1:6379. 由于目标计算机积极拒绝，无法连接。.
+[2026-10-13 21:18:47,949.949] _internal.py -> _log line:97 [INFO]: [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+[2026-10-13 21:18:47,949.949] _internal.py -> _log line:97 [INFO]: [33mPress CTRL+C to quit[0m
+[2026-10-13 21:18:47,951.951] _internal.py -> _log line:97 [INFO]:  * Restarting with stat
+[2026-10-13 21:18:51,743.743] builtin_category_manager.py -> init line:37 [INFO]: 插件分类加载完成：5 个
+[2026-10-13 21:18:51,758.758] builtin_provider_manager.py -> init line:25 [INFO]: 内置插件加载完成：google，分类 search，工具 2 个
+[2026-10-13 21:18:51,758.758] builtin_provider_manager.py -> init line:25 [INFO]: 内置插件加载完成：other_tool，分类 other，工具 0 个
+[2026-10-13 21:18:53,818.818] app.py -> <module> line:103 [WARNING]: 嵌入模型预下载任务提交失败（Redis 可能未启动）：Error 10061 connecting to 127.0.0.1:6379. 由于目标计算机积极拒绝，无法连接。.
+[2026-10-13 21:18:53,829.829] _internal.py -> _log line:97 [WARNING]:  * Debugger is active!
+[2026-10-13 21:18:53,834.834] _internal.py -> _log line:97 [INFO]:  * Debugger PIN: 197-459-823
+[2026-10-13 21:22:43,726.726] _internal.py -> _log line:97 [INFO]: 127.0.0.1 - - [13/Oct/2026 21:22:43] "POST /datasets HTTP/1.1" 200 -
+[2026-10-13 21:23:13,596.596] _internal.py -> _log line:97 [INFO]: 127.0.0.1 - - [13/Oct/2026 21:23:13] "POST /datasets HTTP/1.1" 200 -
+[2026-10-13 21:24:54,399.399] _internal.py -> _log line:97 [INFO]: 127.0.0.1 - - [13/Oct/2026 21:24:54] "GET /datasets?id=%20%20%20%20%20%20"id":%20"442aa6c0-6344-4f88-8e42-a6248cf148fd" HTTP/1.1" 200 -
+[2026-10-13 21:27:57,000.000] _internal.py -> _log line:97 [INFO]: 127.0.0.1 - - [13/Oct/2026 21:27:57] "[35m[1mGET /datasets/ HTTP/1.1[0m" 500 -
+[2026-10-13 21:28:06,363.363] _internal.py -> _log line:97 [INFO]: 127.0.0.1 - - [13/Oct/2026 21:28:06] "[35m[1mGET /datasets/ HTTP/1.1[0m" 500 -
+[2026-10-13 21:28:40,782.782] _internal.py -> _log line:97 [INFO]: 127.0.0.1 - - [13/Oct/2026 21:28:40] "[35m[1mGET /datasets/ HTTP/1.1[0m" 500 -
+[2026-10-13 21:29:23,550.550] _internal.py -> _log line:97 [INFO]: 127.0.0.1 - - [13/Oct/2026 21:29:23] "[35m[1mGET /datasets/ HTTP/1.1[0m" 500 -
+[2026-10-13 21:30:57,499.499] _internal.py -> _log line:97 [INFO]: 127.0.0.1 - - [13/Oct/2026 21:30:57] "GET /datasets?id=442aa6c0-6344-4f88-8e42-a6248cf148fd HTTP/1.1" 200 -
+[2026-10-13 21:32:07,021.021] _internal.py -> _log line:97 [INFO]: 127.0.0.1 - - [13/Oct/2026 21:32:07] "[35m[1mPUT /datasets/ HTTP/1.1[0m" 500 -
+[2026-10-13 21:32:52,582.582] _internal.py -> _log line:97 [INFO]: 127.0.0.1 - - [13/Oct/2026 21:32:52] "[35m[1mPUT /datasets HTTP/1.1[0m" 500 -
+[2026-10-13 21:34:54,180.180] _internal.py -> _log line:97 [INFO]: 127.0.0.1 - - [13/Oct/2026 21:34:54] "[35m[1mPUT /datasets/ HTTP/1.1[0m" 500 -
+[2026-10-13 21:38:57,488.488] _internal.py -> _log line:97 [INFO]: 127.0.0.1 - - [13/Oct/2026 21:38:57] "[35m[1mPUT /datasets/ HTTP/1.1[0m" 500 -
+[2026-10-13 21:39:32,833.833] _internal.py -> _log line:97 [INFO]: 127.0.0.1 - - [13/Oct/2026 21:39:32] "[35m[1mGET /datasets/ HTTP/1.1[0m" 500 -
+[2026-10-13 21:41:14,934.934] _internal.py -> _log line:97 [INFO]: 127.0.0.1 - - [13/Oct/2026 21:41:14] "[35m[1mGET /datasets/ HTTP/1.1[0m" 500 -
+[2026-10-13 21:42:49,636.636] _internal.py -> _log line:97 [INFO]: 127.0.0.1 - - [13/Oct/2026 21:42:49] "GET /datasets/442aa6c0-6344-4f88-8e42-a6248cf148fd HTTP/1.1" 200 -
+[2026-10-13 21:44:51,037.037] _internal.py -> _log line:97 [INFO]: 127.0.0.1 - - [13/Oct/2026 21:44:51] "PUT /datasets/a666a888-8888-6666-1234-b9d69212aaaa HTTP/1.1" 200 -
+[2026-10-13 21:45:02,330.330] _internal.py -> _log line:97 [INFO]: 127.0.0.1 - - [13/Oct/2026 21:45:02] "PUT /datasets/442aa6c0-6344-4f88-8e42-a6248cf148fd HTTP/1.1" 200 -
+[2026-10-13 21:47:07,067.067] _internal.py -> _log line:97 [INFO]: 127.0.0.1 - - [13/Oct/2026 21:47:07] "DELETE /datasets/442aa6c0-6344-4f88-8e42-a6248cf148fd HTTP/1.1" 200 -
+[2026-10-13 21:49:45,762.762] _internal.py -> _log line:97 [INFO]: 127.0.0.1 - - [13/Oct/2026 21:49:45] "GET /datasets/442aa6c0-6344-4f88-8e42-a6248cf148fd HTTP/1.1" 200 -

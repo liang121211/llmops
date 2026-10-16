@@ -35,7 +35,7 @@ DEFAULT_CONFIG = {
     "WEAVIATE_URL": os.getenv("WEAVIATE_URL", "http://localhost:8080"),
     # Weaviate 连接参数（flask-weaviate 优先读取这些细粒度配置）
     "WEAVIATE_HTTP_HOST": os.getenv("WEAVIATE_HTTP_HOST", "localhost"),
-    "WEAVIATE_HTTP_PORT": int(os.getenv("WEAVIATE_HTTP_PORT", "8080")),
+    "WEAVIATE_HTTP_PORT": int(os.getenv("WEAVIATE_HTTP_PORT", "8090")),
     "WEAVIATE_GRPC_HOST": os.getenv("WEAVIATE_GRPC_HOST", "localhost"),
     "WEAVIATE_GRPC_PORT": int(os.getenv("WEAVIATE_GRPC_PORT", "50051")),
     "WEAVIATE_COLLECTION": os.getenv("WEAVIATE_COLLECTION", "llmops"),
@@ -73,6 +73,8 @@ DEFAULT_CONFIG = {
     "REDIS_PASSWORD": os.getenv("REDIS_PASSWORD", ""),
     "REDIS_DB": int(os.getenv("REDIS_DB", "0")),
     "REDIS_USE_SSL": os.getenv("REDIS_USE_SSL", "false").lower() == "true",
+    # 分布式缓存锁的默认超时时间（秒），到期自动释放防止持有者崩溃造成死锁
+    "REDIS_LOCK_TIMEOUT": int(os.getenv("REDIS_LOCK_TIMEOUT", "600")),
     # Celery 配置：broker 与 result_backend 共用 Redis 的不同 DB
     "CELERY_BROKER_DB": int(os.getenv("CELERY_BROKER_DB", "1")),
     "CELERY_RESULT_BACKEND_DB": int(os.getenv("CELERY_RESULT_BACKEND_DB", "1")),

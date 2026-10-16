@@ -1,9 +1,10 @@
 from flask_wtf import FlaskForm
 from marshmallow import Schema, fields
 from wtforms import StringField
-from wtforms.validators import DataRequired, ValidationError
+from wtforms.validators import DataRequired, Length, ValidationError
 
 from internal.entity import MAX_DOCUMENT_BATCH_SIZE, ProcessType
+from pkg.paginator import PaginatorReq
 
 
 def _validate_process_type(form, field):
@@ -85,6 +86,24 @@ def deduplicate_ids(upload_file_ids: list) -> list:
     return list(dict.fromkeys(upload_file_ids))
 
 
+class DocumentListReq(PaginatorReq):
+    """文档分页列表请求校验，分页参数由基类提供。"""
+
+    pass
+
+
+class UpdateDocumentReq(FlaskForm):
+    """修改文档请求校验，目前只支持修改文档标题。"""
+
+    name = StringField(
+        "name",
+        validators=[
+            DataRequired(message="name参数必须传递"),
+            Length(max=255, message="name参数最大长度为255字符"),
+        ],
+    )
+
+
 class DocumentSchema(Schema):
     """文档响应拼装。"""
 
@@ -104,9 +123,32 @@ class DocumentSchema(Schema):
     updated_at = fields.DateTime(format="iso")
 
 
+class DocumentBatchStatusSchema(Schema):
+    """文档批处理状态响应，合并文档与上传文件信息。"""
+
+    id = fields.UUID()
+    name = fields.String()
+    extension = fields.String(attribute="upload_file.extension")
+    mime_type = fields.String(attribute="upload_file.mime_type")
+    size = fields.Integer(attribute="upload_file.size")
+    created_at = fields.DateTime(format="iso")
+    position = fields.Integer()
+    segment_count = fields.Integer()
+    status = fields.String()
+    error = fields.String()
+    stopped_at = fields.DateTime(format="iso")
+    processing_started_at = fields.DateTime(format="iso")
+    parsing_completed_at = fields.DateTime(format="iso")
+    splitting_completed_at = fields.DateTime(format="iso")
+    completed_segment_count = fields.Integer()
+
+
 __all__ = [
     "CreateDocumentReq",
+    "DocumentBatchStatusSchema",
+    "DocumentListReq",
     "DocumentSchema",
+    "UpdateDocumentReq",
     "deduplicate_ids",
     "validate_custom_rule",
     "validate_upload_file_ids",

@@ -22,7 +22,7 @@ def init_celery(app: Flask) -> Celery:
     """按 .env 里的 CELERY_* / REDIS_* 配置初始化 Celery 并挂到 app 上。
 
     broker 与 result_backend 共用同一个 Redis 实例的不同 DB；
-    FlaskTask 被设为默认任务基类，后续定义的 @celery.task 自动继承上下文能力。
+    FlaskTask 通过 task_cls 注册为任务基类，后续定义的 @celery.task 自动继承上下文能力。
     """
     config = app.config
     redis_host = str(config.get("REDIS_HOST", "127.0.0.1"))
@@ -45,6 +45,9 @@ def init_celery(app: Flask) -> Celery:
         app.import_name,
         broker=f"{base_url}/{broker_db}",
         backend=f"{base_url}/{backend_db}",
+        # 注意：@app.task 装饰器取的是 Celery.Task（由 task_cls 生成，见 _task_from_fun），
+        # conf 里的 task_default_base 对装饰器定义的任务完全无效，必须走构造参数
+        task_cls=FlaskTask,
     )
     celery.conf.update(
         task_ignore_result=bool(config.get("CELERY_TASK_IGNORE_RESULT", False)),
@@ -52,8 +55,6 @@ def init_celery(app: Flask) -> Celery:
         broker_connection_retry_on_startup=bool(
             config.get("CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP", False)
         ),
-        # 把 FlaskTask 设为默认基类，所有 @celery.task 自动获得 app context
-        task_default_base=FlaskTask,
     )
     # 让 FlaskTask 能拿到 app 实例
     FlaskTask._flask_app = app

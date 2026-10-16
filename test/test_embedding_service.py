@@ -74,3 +74,28 @@ def test_cache_dir_created_automatically(tmp_path, fake_embeddings):
     ce.embed_query("auto")
 
     assert cache_dir.exists()
+
+
+class TestIsModelCached:
+    """is_model_cached 只做本地检查，网络函数全部以 patch 替代。"""
+
+    @pytest.fixture
+    def service(self):
+        import inject
+
+        from internal.service.embedding_service import EmbeddingService
+
+        return inject.instance(EmbeddingService)
+
+    def test_returns_true_when_snapshot_exists(self, service):
+        with patch(
+            "huggingface_hub.snapshot_download", return_value="/cache/snapshot"
+        ):
+            assert service.is_model_cached() is True
+
+    def test_returns_false_when_missing(self, service):
+        with patch(
+            "huggingface_hub.snapshot_download",
+            side_effect=Exception("LocalEntryNotFoundError"),
+        ):
+            assert service.is_model_cached() is False

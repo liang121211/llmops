@@ -1,11 +1,13 @@
 import inject
 
 from internal.handler.app_handler import AppHandler
+from internal.handler.keyword_handler import KeywordHandler
 from internal.router.router import Router
 
 
 def _configure(binder):
     binder.bind_to_constructor(AppHandler, AppHandler)
+    binder.bind_to_constructor(KeywordHandler, KeywordHandler)
     binder.bind_to_constructor(Router, Router)
 
 

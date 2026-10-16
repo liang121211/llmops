@@ -1,14 +1,19 @@
+import logging
 import uuid
 from dataclasses import dataclass
 from typing import Any, ClassVar
 
 import inject
-from sqlalchemy import select
+from sqlalchemy import func, select
 
+from internal.entity import DOCUMENT_PROCESSING_STATUSES
 from internal.model.dataset import Dataset
+from internal.model.document import Document
 from internal.service.base_service import BaseService
 from pkg.paginator import Paginator, PaginatorReq
 from pkg.sqlalchemy import SQLAlchemy
+
+logger = logging.getLogger(__name__)
 
 # 知识库列表按创建时间倒序，最新的排在最前面
 DATASET_ORDER = (Dataset.created_at.desc(), Dataset.id.desc())
@@ -63,6 +68,25 @@ class DatasetService(BaseService[Dataset]):
         return self.get_list(
             Dataset.account_id == account_id, order_by=DATASET_ORDER
         )
+
+    def has_processing_documents(self, dataset_id: Any) -> bool:
+        """判断知识库下是否还有处于构建流程中的文档。"""
+        stmt = (
+            select(func.count())
+            .select_from(Document)
+            .where(
+                Document.dataset_id == dataset_id,
+                Document.status.in_(DOCUMENT_PROCESSING_STATUSES),
+            )
+        )
+        return (self.db.session.execute(stmt).scalar() or 0) > 0
+
+    def trigger_delete(self, dataset_id: Any) -> None:
+        """提交异步任务级联删除知识库及其全部数据。"""
+        from internal.task.dataset_task import delete_dataset_task
+
+        logger.info("提交知识库删除任务：%s", dataset_id)
+        delete_dataset_task.delay(str(dataset_id))
 
 
 __all__ = ["DatasetService", "DEFAULT_DATASET_DESCRIPTION_FORMATTER"]

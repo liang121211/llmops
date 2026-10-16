@@ -9,7 +9,7 @@ def test_init_weaviate_registers_extension():
     app = Flask("weaviate_test")
     app.config.update(
         WEAVIATE_HTTP_HOST="localhost",
-        WEAVIATE_HTTP_PORT=8080,
+        WEAVIATE_HTTP_PORT=8090,
         WEAVIATE_GRPC_HOST="localhost",
         WEAVIATE_GRPC_PORT=50051,
     )

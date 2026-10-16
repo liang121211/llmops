@@ -1,8 +1,11 @@
 from unittest.mock import MagicMock, patch
+from uuid import uuid4
 
 import pytest
 
+from internal.extension.celery_extension import FlaskTask
 from internal.pkg.response import HttpCode
+from internal.task.build_documents_task import build_documents_task
 
 
 DEMO_TASK_URL = "/celery/demo_task"
@@ -93,3 +96,17 @@ def test_get_demo_task_requires_task_id(client):
 
     assert body["code"] == HttpCode.VALIDATE_ERROR.value
     assert "task_id" in body["message"]
+
+
+class TestFlaskTaskBase:
+    """装饰器任务必须继承 FlaskTask，否则 worker 里访问 db.session 会报无应用上下文。"""
+
+    def test_build_documents_task_uses_flask_task_base(self):
+        assert isinstance(build_documents_task, FlaskTask)
+
+    def test_task_runs_with_app_context(self):
+        # 用不存在的文档 id：任务体会正常走到 db.session.get 并跳过，无副作用
+        result = build_documents_task.apply(args=[[str(uuid4())]])
+
+        assert result.successful(), result.result
+        assert result.result == "built 1 documents"

@@ -5,6 +5,26 @@ import pytest
 
 from internal.entity import DEFAULT_PROCESS_RULE, ProcessType
 from internal.pkg.response import HttpCode
+from internal.service.document_service import DocumentService
+
+
+@pytest.fixture
+def build_calls(monkeypatch):
+    """拦截 trigger_build，避免测试真实提交 Celery 任务污染队列。"""
+    calls = []
+
+    # autoparams 包装后真实类在 __wrapped__，patch 必须打在真实类上
+    def _fake_trigger(self_service, document_ids):
+        calls.extend(document_ids)
+
+    monkeypatch.setattr(DocumentService.__wrapped__, "trigger_build", _fake_trigger)
+    return calls
+
+
+@pytest.fixture(autouse=True)
+def _isolate_celery(build_calls):
+    """本模块所有用例默认拦截构建任务提交。"""
+    return build_calls
 
 
 @pytest.fixture
@@ -211,6 +231,19 @@ def test_create_documents_dataset_not_found(uploaded_files, client, clean_datase
     ).get_json()
 
     assert body["code"] == HttpCode.NOT_FOUND.value
+
+
+def test_create_documents_triggers_build(dataset, uploaded_files, client, build_calls):
+    """创建成功后应立即提交构建任务，文档 ID 与创建结果一致。"""
+    file_ids = [f["id"] for f in uploaded_files[:2]]
+    body = client.post(
+        f"/datasets/{dataset['id']}/documents",
+        json=_automatic_payload(file_ids),
+    ).get_json()
+
+    assert body["code"] == HttpCode.SUCCESS.value
+    docs = body["data"]["documents"]
+    assert build_calls == [d["id"] for d in docs]
 
 
 def test_create_documents_position_increments(dataset, uploaded_files, client):

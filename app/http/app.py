@@ -26,9 +26,15 @@ from internal.service.api_tool_service import ApiToolService
 from internal.service.builtin_service import BuiltinService
 from internal.service.celery_service import CeleryService
 from internal.service.cos_service import CosService
+from internal.service.dataset_delete_service import DatasetDeleteService
 from internal.service.dataset_service import DatasetService
 from internal.service.document_service import DocumentService
+from internal.service.document_status_service import DocumentStatusService
 from internal.service.embedding_service import EmbeddingService
+from internal.service.index_build_service import IndexBuildService
+from internal.service.keyword_table_service import KeywordTableService
+from internal.service.process_rule_service import ProcessRuleService
+from internal.service.segment_service import SegmentService
 from internal.service.upload_file_service import UploadFileService
 from internal.service.vector_store_service import VectorStoreService
 from pkg.sqlalchemy import SQLAlchemy, db
@@ -56,9 +62,15 @@ def _configure(binder):
     binder.bind_to_constructor(UploadFileService, UploadFileService)
     binder.bind_to_constructor(CeleryService, CeleryService)
     binder.bind_to_constructor(DatasetService, DatasetService)
+    binder.bind_to_constructor(DatasetDeleteService, DatasetDeleteService)
     binder.bind_to_constructor(DocumentService, DocumentService)
+    binder.bind_to_constructor(DocumentStatusService, DocumentStatusService)
     binder.bind_to_constructor(EmbeddingService, EmbeddingService)
     binder.bind_to_constructor(VectorStoreService, VectorStoreService)
+    binder.bind_to_constructor(KeywordTableService, KeywordTableService)
+    binder.bind_to_constructor(ProcessRuleService, ProcessRuleService)
+    binder.bind_to_constructor(IndexBuildService, IndexBuildService)
+    binder.bind_to_constructor(SegmentService, SegmentService)
     # 自定义 API 工具管理器无状态，容器里保留一个实例给服务层复用
     binder.bind_to_constructor(ApiProviderManager, ApiProviderManager)
     binder.bind_to_constructor(CosService, CosService)
@@ -85,20 +97,49 @@ celery = app.extensions["celery"]
 # 导入 task 模块使 @celery.task 装饰的任务注册到 celery 实例
 import internal.task.demo_task  # noqa: F401, E402
 import internal.task.download_embedding_task  # noqa: F401, E402
+import internal.task.build_documents_task  # noqa: F401, E402
+import internal.task.document_status_task  # noqa: F401, E402
+import internal.task.dataset_task  # noqa: F401, E402
 
 # 服务器完全启动后异步预下载嵌入模型，避免首次请求长时间阻塞
-if __name__ == "__main__":
-    import logging
+import logging
+import os
+import threading
 
-    logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
+
+
+def _submit_embedding_download():
+    """延迟提交嵌入模型预下载任务，确保 app 和 Celery 已完全初始化。"""
     try:
         redis_client = app.extensions.get("redis")
         if redis_client is not None:
             redis_client.ping()
+        # 模型已完整落盘时跳过提交，避免每次启动都刷下载日志
+        embedding_service = inject.instance(EmbeddingService)
+        if embedding_service.is_model_cached():
+            logger.info(
+                "嵌入模型 %s 已在本地缓存，跳过预下载任务",
+                embedding_service.model_name,
+            )
+            return
         from internal.task.download_embedding_task import download_embedding_model
 
         download_embedding_model.delay()
         logger.info("已提交嵌入模型预下载任务")
     except Exception as e:
         logger.warning("嵌入模型预下载任务提交失败（Redis 可能未启动）：%s", e)
+
+
+# 仅在直接运行 app 时自动提交预下载任务（排除测试和 celery worker）
+import sys
+
+_is_main_app = (
+    __name__ == "__main__"
+    or (len(sys.argv) > 0 and "app.py" in sys.argv[0] and "celery" not in sys.argv[0])
+)
+if _is_main_app:
+    threading.Timer(3, _submit_embedding_download).start()
+
+if __name__ == "__main__":
     app.run()

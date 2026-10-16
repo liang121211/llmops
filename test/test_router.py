@@ -46,6 +46,23 @@ def test_register_router_registers_expected_rules(router):
     DATASETS_RULE = "/datasets"
     DATASET_DETAIL_RULE = "/datasets/<uuid:dataset_id>"
     DATASET_DOCUMENTS_RULE = "/datasets/<uuid:dataset_id>/documents"
+    DATASET_BATCH_STATUS_RULE = "/datasets/<uuid:dataset_id>/documents/batch/<string:batch_id>"
+    DATASET_DOCUMENT_DETAIL_RULE = "/datasets/<uuid:dataset_id>/documents/<uuid:document_id>"
+    DATASET_DOCUMENT_DISABLE_RULE = (
+        "/datasets/<uuid:dataset_id>/documents/<uuid:document_id>/disable"
+    )
+    DATASET_DOCUMENT_ENABLE_RULE = (
+        "/datasets/<uuid:dataset_id>/documents/<uuid:document_id>/enable"
+    )
+    DATASET_SEGMENTS_RULE = (
+        "/datasets/<uuid:dataset_id>/documents/<uuid:document_id>/segments"
+    )
+    DATASET_SEGMENT_DETAIL_RULE = (
+        "/datasets/<uuid:dataset_id>/documents/<uuid:document_id>/segments/<uuid:segment_id>"
+    )
+    DATASET_SEGMENT_DISABLE_RULE = DATASET_SEGMENT_DETAIL_RULE + "/disable"
+    DATASET_SEGMENT_ENABLE_RULE = DATASET_SEGMENT_DETAIL_RULE + "/enable"
+    KEYWORDS_EXTRACT_RULE = "/keywords/extract"
     assert set(rules) == {
         "/ping",
         "/app/chat",
@@ -67,6 +84,15 @@ def test_register_router_registers_expected_rules(router):
         DATASETS_RULE,
         DATASET_DETAIL_RULE,
         DATASET_DOCUMENTS_RULE,
+        DATASET_BATCH_STATUS_RULE,
+        DATASET_DOCUMENT_DETAIL_RULE,
+        DATASET_DOCUMENT_DISABLE_RULE,
+        DATASET_DOCUMENT_ENABLE_RULE,
+        DATASET_SEGMENTS_RULE,
+        DATASET_SEGMENT_DETAIL_RULE,
+        DATASET_SEGMENT_DISABLE_RULE,
+        DATASET_SEGMENT_ENABLE_RULE,
+        KEYWORDS_EXTRACT_RULE,
     }
     assert "GET" in rules["/ping"].methods
     assert "POST" in rules["/app/chat"].methods
@@ -147,10 +173,63 @@ def test_register_router_registers_expected_rules(router):
             dataset_detail_methods |= rule.methods - {"OPTIONS", "HEAD"}
     assert dataset_detail_methods == {"GET", "PUT", "DELETE"}
     assert rules[DATASET_DETAIL_RULE].arguments == {"dataset_id"}
-    # 知识库文档创建只开放 POST
-    assert "POST" in rules[DATASET_DOCUMENTS_RULE].methods
-    assert "GET" not in rules[DATASET_DOCUMENTS_RULE].methods
+    # 知识库文档：POST 创建、GET 分页列表，共用 /datasets/<dataset_id>/documents
+    documents_methods = set()
+    for rule in app.url_map.iter_rules():
+        if str(rule) == DATASET_DOCUMENTS_RULE:
+            documents_methods |= rule.methods - {"OPTIONS", "HEAD"}
+    assert documents_methods == {"POST", "GET"}
     assert rules[DATASET_DOCUMENTS_RULE].arguments == {"dataset_id"}
+    # 批次状态查询只开放 GET，需要 dataset_id 和 batch_id 两个动态段
+    assert "GET" in rules[DATASET_BATCH_STATUS_RULE].methods
+    assert "POST" not in rules[DATASET_BATCH_STATUS_RULE].methods
+    assert rules[DATASET_BATCH_STATUS_RULE].arguments == {"dataset_id", "batch_id"}
+    # 单文档：GET 查询、PUT 修改、DELETE 删除共用路径，用方法区分
+    document_detail_methods = set()
+    for rule in app.url_map.iter_rules():
+        if str(rule) == DATASET_DOCUMENT_DETAIL_RULE:
+            document_detail_methods |= rule.methods - {"OPTIONS", "HEAD"}
+    assert document_detail_methods == {"GET", "PUT", "DELETE"}
+    assert rules[DATASET_DOCUMENT_DETAIL_RULE].arguments == {"dataset_id", "document_id"}
+    # 禁用/启用只开放 PUT，路径互不相同
+    for ops_rule in (DATASET_DOCUMENT_DISABLE_RULE, DATASET_DOCUMENT_ENABLE_RULE):
+        assert "PUT" in rules[ops_rule].methods
+        assert "GET" not in rules[ops_rule].methods
+        assert rules[ops_rule].arguments == {"dataset_id", "document_id"}
+    # 知识库片段：GET 分页列表、POST 新增，共用 segments 路径
+    segments_methods = set()
+    for rule in app.url_map.iter_rules():
+        if str(rule) == DATASET_SEGMENTS_RULE:
+            segments_methods |= rule.methods - {"OPTIONS", "HEAD"}
+    assert segments_methods == {"GET", "POST"}
+    assert rules[DATASET_SEGMENTS_RULE].arguments == {"dataset_id", "document_id"}
+    # 单片段：GET 查询、PUT 修改、DELETE 删除共用路径
+    segment_detail_methods = set()
+    for rule in app.url_map.iter_rules():
+        if str(rule) == DATASET_SEGMENT_DETAIL_RULE:
+            segment_detail_methods |= rule.methods - {"OPTIONS", "HEAD"}
+    assert segment_detail_methods == {"GET", "PUT", "DELETE"}
+    assert rules[DATASET_SEGMENT_DETAIL_RULE].arguments == {
+        "dataset_id",
+        "document_id",
+        "segment_id",
+    }
+    # 片段禁用/启用只开放 PUT
+    for seg_ops_rule in (
+        DATASET_SEGMENT_DISABLE_RULE,
+        DATASET_SEGMENT_ENABLE_RULE,
+    ):
+        assert "PUT" in rules[seg_ops_rule].methods
+        assert "GET" not in rules[seg_ops_rule].methods
+        assert rules[seg_ops_rule].arguments == {
+            "dataset_id",
+            "document_id",
+            "segment_id",
+        }
+    # 关键词提取只开放 POST，没有动态段
+    assert "POST" in rules[KEYWORDS_EXTRACT_RULE].methods
+    assert "GET" not in rules[KEYWORDS_EXTRACT_RULE].methods
+    assert rules[KEYWORDS_EXTRACT_RULE].arguments == set()
 
 
 def test_registered_view_functions_are_handler_methods(router):
@@ -244,8 +323,68 @@ def test_registered_view_functions_are_handler_methods(router):
         == router.dataset_handler.create_documents
     )
     assert (
+        app.view_functions["app.get_batch_status"]
+        == router.dataset_handler.get_batch_status
+    )
+    assert (
+        app.view_functions["app.get_documents"]
+        == router.dataset_handler.get_documents
+    )
+    assert (
+        app.view_functions["app.get_document"]
+        == router.dataset_handler.get_document
+    )
+    assert (
+        app.view_functions["app.update_document"]
+        == router.dataset_handler.update_document
+    )
+    assert (
+        app.view_functions["app.disable_document"]
+        == router.dataset_handler.disable_document
+    )
+    assert (
+        app.view_functions["app.enable_document"]
+        == router.dataset_handler.enable_document
+    )
+    assert (
+        app.view_functions["app.delete_document"]
+        == router.dataset_handler.delete_document
+    )
+    assert (
+        app.view_functions["app.get_segments"]
+        == router.dataset_handler.get_segments
+    )
+    assert (
+        app.view_functions["app.get_segment"]
+        == router.dataset_handler.get_segment
+    )
+    assert (
+        app.view_functions["app.create_segment"]
+        == router.dataset_handler.create_segment
+    )
+    assert (
+        app.view_functions["app.update_segment"]
+        == router.dataset_handler.update_segment
+    )
+    assert (
+        app.view_functions["app.delete_segment"]
+        == router.dataset_handler.delete_segment
+    )
+    assert (
+        app.view_functions["app.disable_segment"]
+        == router.dataset_handler.disable_segment
+    )
+    assert (
+        app.view_functions["app.enable_segment"]
+        == router.dataset_handler.enable_segment
+    )
+    assert (
         app.view_functions["app.load_document"]
         == router.document_handler.load_document
+    )
+    assert (
+        app.view_functions["app.extract"]
+        == router.keyword_handler.extract
     )
 
 

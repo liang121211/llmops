@@ -58,13 +58,46 @@ DEFAULT_PROCESS_RULE = {
 }
 
 
+class DocumentStatus:
+    """文档处理生命周期状态。"""
+
+    WAITING = "waiting"
+    PARSING = "parsing"
+    SPLITTING = "splitting"
+    INDEXING = "indexing"
+    COMPLETED = "completed"
+    ERROR = "error"
+    DISABLED = "disabled"
+
+
+# 处理中的状态集合：处于这些状态的文档禁止删除/再次变更状态
+DOCUMENT_PROCESSING_STATUSES = (
+    DocumentStatus.WAITING,
+    DocumentStatus.PARSING,
+    DocumentStatus.SPLITTING,
+    DocumentStatus.INDEXING,
+)
+
+
+class SegmentStatus:
+    """片段处理生命周期状态。"""
+
+    WAITING = "waiting"
+    PROCESSING = "processing"
+    COMPLETED = "completed"
+    ERROR = "error"
+
+
 __all__ = [
     "ALLOWED_DOCUMENT_EXTENSION",
     "ALLOWED_IMAGE_EXTENSION",
     "DEFAULT_PROCESS_RULE",
+    "DOCUMENT_PROCESSING_STATUSES",
+    "DocumentStatus",
     "MAX_DOCUMENT_BATCH_SIZE",
     "MAX_UPLOAD_FILE_SIZE",
     "ProcessType",
+    "SegmentStatus",
     "StorageType",
     "UploadFileType",
 ]

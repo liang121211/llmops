@@ -11,6 +11,8 @@ from sqlalchemy import (
     PrimaryKeyConstraint,
     String,
     Text,
+    func,
+    select,
 )
 from sqlalchemy.dialects.postgresql import UUID
 
@@ -51,6 +53,50 @@ class Document(db.Model):
         DateTime, default=datetime.now, onupdate=datetime.now, nullable=False
     )
     created_at = Column(DateTime, default=datetime.now, nullable=False)
+
+    @property
+    def upload_file(self):
+        """获取关联的上传文件对象。"""
+        from internal.model.upload_file import UploadFile
+
+        return db.session.get(UploadFile, self.upload_file_id)
+
+    @property
+    def process_rule(self):
+        """获取关联的处理规则对象。"""
+        from internal.model.process_rule import ProcessRule
+
+        return db.session.get(ProcessRule, self.process_rule_id)
+
+    @property
+    def segment_count(self) -> int:
+        """获取该片段的数量。"""
+        from internal.model.segment import Segment
+
+        stmt = select(func.count()).where(Segment.document_id == self.id)
+        return db.session.execute(stmt).scalar() or 0
+
+    @property
+    def hit_count(self) -> int:
+        """获取所有片段的命中次数总和。"""
+        from internal.model.segment import Segment
+
+        stmt = select(func.coalesce(func.sum(Segment.hit_count), 0)).where(
+            Segment.document_id == self.id
+        )
+        return db.session.execute(stmt).scalar() or 0
+
+    @property
+    def completed_segment_count(self) -> int:
+        """获取已完成处理的片段数量。"""
+        from internal.entity import SegmentStatus
+        from internal.model.segment import Segment
+
+        stmt = select(func.count()).where(
+            Segment.document_id == self.id,
+            Segment.status == SegmentStatus.COMPLETED,
+        )
+        return db.session.execute(stmt).scalar() or 0
 
 
 __all__ = ["Document"]
