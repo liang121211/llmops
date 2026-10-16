@@ -164,3 +164,15 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+
+
+# 忽略 HuggingFace 的模型缓存文件夹
+models--*
+# 忽略整个 embeddings 下的缓存目录（防止以后又出问题）
+internal/embeddings/models--*
+# 忽略 Python 虚拟环境（永远不要提交这个）
+.venv/
+# 忽略常见的大模型文件后缀
+*.safetensors
+*.bin
+*.index
