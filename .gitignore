@@ -17,6 +17,9 @@ venv/
 storage/vector_store/
 storage/embeddings/
 
+# 嵌入模型权重由异步任务下载，不提交到仓库
+internal/embeddings/
+
 # Ignore the files under storage/logs/ folder
 storage/logs/*
 
@@ -161,4 +164,3 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
-
