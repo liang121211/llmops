@@ -6,6 +6,9 @@ from internal.extension.migration_extension import MIGRATIONS_DIR, migrate
 from internal.extension.redis_extension import init_redis
 from internal.extension.weaviate_extension import get_weaviate, init_weaviate
 
+# 登录扩展会牵出服务层与中间件，放在最后导入，避免包初始化时出现循环依赖
+from internal.extension.login_extension import init_login
+
 __all__ = [
     "FlaskTask",
     "MIGRATIONS_DIR",
@@ -13,6 +16,7 @@ __all__ = [
     "init_celery",
     "init_database",
     "init_inject",
+    "init_login",
     "init_logging",
     "init_redis",
     "init_weaviate",

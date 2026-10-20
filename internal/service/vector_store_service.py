@@ -45,6 +45,49 @@ class VectorStoreService:
         vector_store = self._get_vector_store()
         return vector_store.as_retriever(**kwargs)
 
+    def search_by_vector(
+        self, query: str, dataset_id: str, limit: int
+    ) -> list[dict]:
+        """按查询文本做向量检索，返回带相似度过的相关片段。
+
+        先用嵌入模型把 query 转成向量，再在集合里做近邻检索；
+        只取该知识库下、文档与片段均处于启用状态的数据。
+        返回每条命中含 node_id/segment_id/document_id/text/score。
+        """
+        from weaviate.classes.query import Filter, MetadataQuery
+
+        if limit <= 0:
+            return []
+        embeddings = self.embedding_service.get_embeddings()
+        query_vector = embeddings.embed_query(query)
+        filters = Filter.all_of([
+            Filter.by_property("dataset_id").equal(str(dataset_id)),
+            Filter.by_property("document_enabled").equal(True),
+            Filter.by_property("segment_enabled").equal(True),
+        ])
+        result = self.collection.query.near_vector(
+            near_vector=query_vector,
+            limit=limit,
+            filters=filters,
+            # Weaviate 1.27 的 near_vector 不回填 score，用 certainty（余弦相似度，0~1）作为相关度
+            return_metadata=MetadataQuery(score=True, certainty=True),
+        )
+        hits: list[dict] = []
+        for obj in result.objects:
+            props = obj.properties or {}
+            metadata = obj.metadata
+            certainty = getattr(metadata, "certainty", None)
+            score = getattr(metadata, "score", None)
+            value = certainty if certainty is not None else score
+            hits.append({
+                "node_id": str(obj.uuid),
+                "segment_id": props.get("segment_id"),
+                "document_id": props.get("document_id"),
+                "text": props.get("text", ""),
+                "score": float(value) if value is not None else 0.0,
+            })
+        return hits
+
     def update_documents_enabled(self, node_ids: list[str], enabled: bool) -> None:
         """按 node_id 批量更新片段的 document_enabled 元数据。
 

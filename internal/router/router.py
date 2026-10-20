@@ -10,6 +10,8 @@ from internal.handler.celery_handler import CeleryHandler
 from internal.handler.dataset_handler import DatasetHandler
 from internal.handler.document_handler import DocumentHandler
 from internal.handler.keyword_handler import KeywordHandler
+from internal.handler.message_handler import MessageHandler
+from internal.handler.oauth_handler import OAuthHandler
 from internal.handler.upload_file_handler import UploadFileHandler
 
 
@@ -26,6 +28,8 @@ class Router:
     dataset_handler: DatasetHandler
     document_handler: DocumentHandler
     keyword_handler: KeywordHandler
+    message_handler: MessageHandler
+    oauth_handler: OAuthHandler
 
     def register_router(self, app: Flask):
         bp = Blueprint("app", __name__)
@@ -248,10 +252,55 @@ class Router:
             methods=["PUT"],
         )
 
+        # ── 检索召回 ────────────────────────────────────────────────
+        # 知识库召回测试
+        bp.add_url_rule(
+            "/datasets/<uuid:dataset_id>/hit-testing",
+            view_func=self.dataset_handler.hit_testing,
+            methods=["POST"],
+        )
+        # 知识库：查询最近的检索记录
+        bp.add_url_rule(
+            "/datasets/<uuid:dataset_id>/queries",
+            view_func=self.dataset_handler.get_dataset_queries,
+            methods=["GET"],
+        )
+        # 流式响应测试：GET 请求，返回 SSE 事件流
+        bp.add_url_rule(
+            "/app/debug_stream",
+            view_func=self.app_handler.debug_stream_output,
+            methods=["GET"],
+        )
+        # 工具调用 Agent 调试：GET 请求，按用户输入与配置执行智能体并 SSE 返回事件
+        bp.add_url_rule(
+            "/app/agent_debug",
+            view_func=self.app_handler.debug_agent,
+            methods=["GET"],
+        )
         # ── 关键词提取 ──────────────────────────────────────────────
         bp.add_url_rule(
             "/keywords/extract",
             view_func=self.keyword_handler.extract,
+            methods=["POST"],
+        )
+
+        # ── AI 消息处理 ────────────────────────────────────────────
+        # 长期记忆：把最新一轮用户与 AI 的消息压缩进原始摘要
+        bp.add_url_rule(
+            "/messages/memory-summary",
+            view_func=self.message_handler.generate_memory_summary,
+            methods=["POST"],
+        )
+        # 会话名称：根据用户首句提问生成与用户语言一致的会话主题
+        bp.add_url_rule(
+            "/messages/conversation-title",
+            view_func=self.message_handler.generate_conversation_title,
+            methods=["POST"],
+        )
+        # 建议性问题：根据历史对话推测用户接下来最想问的问题，最多 3 个
+        bp.add_url_rule(
+            "/messages/suggested-questions",
+            view_func=self.message_handler.generate_suggested_questions,
             methods=["POST"],
         )
 
@@ -264,6 +313,26 @@ class Router:
         bp.add_url_rule(
             "/celery/demo_task",
             view_func=self.celery_handler.get_demo_task,
+            methods=["GET"],
+        )
+
+        # ── 第三方登录 ──────────────────────────────────────────────
+        # 已集成的 OAuth2 登录方式，供前端渲染登录入口
+        bp.add_url_rule(
+            "/oauth/providers",
+            view_func=self.oauth_handler.get_oauth_providers,
+            methods=["GET"],
+        )
+        # 指定提供商的授权页地址，前端拿到后跳转用户即可
+        bp.add_url_rule(
+            "/oauth/<string:provider_name>/authorize",
+            view_func=self.oauth_handler.get_oauth_authorize,
+            methods=["GET"],
+        )
+        # 第三方授权回调：平台带 code 跳回这里，换取登录凭证
+        bp.add_url_rule(
+            "/oauth/<string:provider_name>",
+            view_func=self.oauth_handler.oauth_login,
             methods=["GET"],
         )
 

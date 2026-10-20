@@ -13,6 +13,7 @@ from internal.extension import (
     MIGRATIONS_DIR,
     init_celery,
     init_database,
+    init_login,
     init_logging,
     init_redis,
     init_weaviate,
@@ -62,6 +63,8 @@ class Http(Flask):
         init_database(self)
         # 建表全部交给 flask-migrate 维护，这里只注册迁移入口
         migrate.init_app(self, db, directory=MIGRATIONS_DIR)
+        # 登录管理器依赖数据库与注入容器，放在数据库初始化之后接进来
+        self.login_manager = init_login(self)
         # 启动时先扫描插件广场的分类，再扫描 providers.yml 动态加载内置插件
         self.category_manager = category_manager.init()
         self.provider_manager = provider_manager.init()

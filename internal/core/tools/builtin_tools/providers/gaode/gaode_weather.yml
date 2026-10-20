@@ -1,0 +1,18 @@
+name: gaode_weather
+label: 高德天气查询
+description: 这是一个基于高德开放平台的天气查询工具，需要城市中文名或城市编码，返回该城市的实时天气或未来几天预报。
+# GAODE_API_KEY 从 .env 读取，不写进配置文件
+params:
+  - name: api_key
+    generate_name: api_key
+    type: string
+    desc: 高德开放平台的 Web 服务 key，留空则读取 .env 中的 GAODE_API_KEY
+    required: false
+  - name: timeout
+    generate_name: timeout
+    type: number
+    desc: 请求高德接口的超时时间，单位秒
+    required: false
+    default: 10
+    min: 1
+    max: 30

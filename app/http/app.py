@@ -6,7 +6,9 @@ import inject
 from flask_migrate import Migrate
 
 from config import Config
+from internal.core.agent import AgentQueueManager
 from internal.core.file_loader import FileLoader
+from internal.core.message_processor import MessageProcessor
 from internal.core.tools.api_tools import ApiProviderManager
 from internal.core.tools.builtin_tools import (
     BuiltinCategoryManager,
@@ -19,24 +21,32 @@ from internal.handler.builtin_handler import BuiltinHandler
 from internal.handler.celery_handler import CeleryHandler
 from internal.handler.dataset_handler import DatasetHandler
 from internal.handler.document_handler import DocumentHandler
+from internal.handler.message_handler import MessageHandler
+from internal.handler.oauth_handler import OAuthHandler
 from internal.handler.upload_file_handler import UploadFileHandler
 from internal.router.router import Router
 from internal.server.http import Http
+from internal.service.account_service import AccountService
 from internal.service.api_tool_service import ApiToolService
+from internal.service.agent_service import AgentService
 from internal.service.builtin_service import BuiltinService
 from internal.service.celery_service import CeleryService
 from internal.service.cos_service import CosService
 from internal.service.dataset_delete_service import DatasetDeleteService
+from internal.service.dataset_query_service import DatasetQueryService
 from internal.service.dataset_service import DatasetService
 from internal.service.document_service import DocumentService
 from internal.service.document_status_service import DocumentStatusService
 from internal.service.embedding_service import EmbeddingService
 from internal.service.index_build_service import IndexBuildService
 from internal.service.keyword_table_service import KeywordTableService
+from internal.service.oauth_service import OAuthService
 from internal.service.process_rule_service import ProcessRuleService
+from internal.service.retrieval_service import RetrievalService
 from internal.service.segment_service import SegmentService
 from internal.service.upload_file_service import UploadFileService
 from internal.service.vector_store_service import VectorStoreService
+from pkg.oauth import OAuth2Manager
 from pkg.sqlalchemy import SQLAlchemy, db
 
 # 配置对象全局唯一，既交给 Flask 也注入给需要读取配置的服务层
@@ -57,8 +67,15 @@ def _configure(binder):
     binder.bind_to_constructor(CeleryHandler, CeleryHandler)
     binder.bind_to_constructor(DatasetHandler, DatasetHandler)
     binder.bind_to_constructor(DocumentHandler, DocumentHandler)
+    binder.bind_to_constructor(MessageHandler, MessageHandler)
+    binder.bind_to_constructor(OAuthHandler, OAuthHandler)
+    # 队列管理器持有各任务的队列，必须全局单例；智能体服务负责起线程与落库
+    binder.bind_to_constructor(AgentQueueManager, AgentQueueManager)
+    binder.bind_to_constructor(AgentService, AgentService)
     binder.bind_to_constructor(BuiltinService, BuiltinService)
     binder.bind_to_constructor(ApiToolService, ApiToolService)
+    # 账号服务同时被登录扩展与中间件使用，容器里保留一个实例
+    binder.bind_to_constructor(AccountService, AccountService)
     binder.bind_to_constructor(UploadFileService, UploadFileService)
     binder.bind_to_constructor(CeleryService, CeleryService)
     binder.bind_to_constructor(DatasetService, DatasetService)
@@ -71,10 +88,17 @@ def _configure(binder):
     binder.bind_to_constructor(ProcessRuleService, ProcessRuleService)
     binder.bind_to_constructor(IndexBuildService, IndexBuildService)
     binder.bind_to_constructor(SegmentService, SegmentService)
+    binder.bind_to_constructor(RetrievalService, RetrievalService)
+    binder.bind_to_constructor(DatasetQueryService, DatasetQueryService)
+    # 第三方登录：提供商注册表全局唯一，登录服务复用同一个账号服务
+    binder.bind_to_constructor(OAuth2Manager, OAuth2Manager)
+    binder.bind_to_constructor(OAuthService, OAuthService)
     # 自定义 API 工具管理器无状态，容器里保留一个实例给服务层复用
     binder.bind_to_constructor(ApiProviderManager, ApiProviderManager)
     binder.bind_to_constructor(CosService, CosService)
     binder.bind_to_constructor(FileLoader, FileLoader)
+    # AI 消息处理器无状态，容器里保留一个实例给控制层复用
+    binder.bind_to_constructor(MessageProcessor, MessageProcessor)
     binder.bind_to_constructor(Router, Router)
     # 两个插件管理器在容器里各只保留一个实例，Http 启动时初始化后全局复用
     binder.bind_to_constructor(BuiltinProviderManager, BuiltinProviderManager)

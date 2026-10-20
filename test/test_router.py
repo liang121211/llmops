@@ -62,11 +62,22 @@ def test_register_router_registers_expected_rules(router):
     )
     DATASET_SEGMENT_DISABLE_RULE = DATASET_SEGMENT_DETAIL_RULE + "/disable"
     DATASET_SEGMENT_ENABLE_RULE = DATASET_SEGMENT_DETAIL_RULE + "/enable"
+    DATASET_HIT_TESTING_RULE = "/datasets/<uuid:dataset_id>/hit-testing"
+    DATASET_QUERIES_RULE = "/datasets/<uuid:dataset_id>/queries"
     KEYWORDS_EXTRACT_RULE = "/keywords/extract"
+    MEMORY_SUMMARY_RULE = "/messages/memory-summary"
+    CONVERSATION_TITLE_RULE = "/messages/conversation-title"
+    SUGGESTED_QUESTIONS_RULE = "/messages/suggested-questions"
+    AGENT_DEBUG_RULE = "/app/agent_debug"
+    OAUTH_PROVIDERS_RULE = "/oauth/providers"
+    OAUTH_AUTHORIZE_RULE = "/oauth/<string:provider_name>/authorize"
+    OAUTH_CALLBACK_RULE = "/oauth/<string:provider_name>"
     assert set(rules) == {
         "/ping",
         "/app/chat",
         "/app/builtin_tool_test",
+        "/app/debug_stream",
+        AGENT_DEBUG_RULE,
         "/app",
         "/builtin-tools",
         "/builtin-tools/categories",
@@ -92,14 +103,41 @@ def test_register_router_registers_expected_rules(router):
         DATASET_SEGMENT_DETAIL_RULE,
         DATASET_SEGMENT_DISABLE_RULE,
         DATASET_SEGMENT_ENABLE_RULE,
+        DATASET_HIT_TESTING_RULE,
+        DATASET_QUERIES_RULE,
         KEYWORDS_EXTRACT_RULE,
+        MEMORY_SUMMARY_RULE,
+        CONVERSATION_TITLE_RULE,
+        SUGGESTED_QUESTIONS_RULE,
+        OAUTH_PROVIDERS_RULE,
+        OAUTH_AUTHORIZE_RULE,
+        OAUTH_CALLBACK_RULE,
     }
+    # AI 消息处理的三个接口都只开放 POST
+    for message_rule in (
+        MEMORY_SUMMARY_RULE,
+        CONVERSATION_TITLE_RULE,
+        SUGGESTED_QUESTIONS_RULE,
+    ):
+        assert "POST" in rules[message_rule].methods
+        assert "GET" not in rules[message_rule].methods
+    # 召回测试接口只开放 POST，检索记录查询只开放 GET
+    assert "POST" in rules[DATASET_HIT_TESTING_RULE].methods
+    assert "GET" not in rules[DATASET_HIT_TESTING_RULE].methods
+    assert "GET" in rules[DATASET_QUERIES_RULE].methods
+    assert "POST" not in rules[DATASET_QUERIES_RULE].methods
     assert "GET" in rules["/ping"].methods
     assert "POST" in rules["/app/chat"].methods
     assert "GET" not in rules["/app/chat"].methods
     # 内置插件测试接口只开放 POST
     assert "POST" in rules["/app/builtin_tool_test"].methods
     assert "GET" not in rules["/app/builtin_tool_test"].methods
+    # 流式测试接口只开放 GET
+    assert "GET" in rules["/app/debug_stream"].methods
+    assert "POST" not in rules["/app/debug_stream"].methods
+    # 智能体调试接口只开放 GET（SSE 流式）
+    assert "GET" in rules[AGENT_DEBUG_RULE].methods
+    assert "POST" not in rules[AGENT_DEBUG_RULE].methods
     # /app 上挂着四条规则，用请求方法区分增删改查
     app_methods = set()
     for rule in app.url_map.iter_rules():
@@ -230,6 +268,14 @@ def test_register_router_registers_expected_rules(router):
     assert "POST" in rules[KEYWORDS_EXTRACT_RULE].methods
     assert "GET" not in rules[KEYWORDS_EXTRACT_RULE].methods
     assert rules[KEYWORDS_EXTRACT_RULE].arguments == set()
+    # 第三方登录的三个接口都只开放 GET
+    for oauth_rule in (OAUTH_PROVIDERS_RULE, OAUTH_AUTHORIZE_RULE, OAUTH_CALLBACK_RULE):
+        assert "GET" in rules[oauth_rule].methods
+        assert "POST" not in rules[oauth_rule].methods
+    # 静态的 providers 路径独立成规则，不会被 provider_name 动态段抢走
+    assert rules[OAUTH_PROVIDERS_RULE].arguments == set()
+    assert rules[OAUTH_AUTHORIZE_RULE].arguments == {"provider_name"}
+    assert rules[OAUTH_CALLBACK_RULE].arguments == {"provider_name"}
 
 
 def test_registered_view_functions_are_handler_methods(router):
@@ -386,6 +432,15 @@ def test_registered_view_functions_are_handler_methods(router):
         app.view_functions["app.extract"]
         == router.keyword_handler.extract
     )
+    assert (
+        app.view_functions["app.get_oauth_providers"]
+        == router.oauth_handler.get_oauth_providers
+    )
+    assert (
+        app.view_functions["app.get_oauth_authorize"]
+        == router.oauth_handler.get_oauth_authorize
+    )
+    assert app.view_functions["app.oauth_login"] == router.oauth_handler.oauth_login
 
 
 def test_ping_view_returns_pong(router):

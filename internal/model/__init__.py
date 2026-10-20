@@ -9,6 +9,8 @@ from internal.model.keyword_table import KeywordTable
 from internal.model.process_rule import ProcessRule
 from internal.model.segment import Segment
 from internal.model.upload_file import UploadFile
+from .conversation import Conversation, Message, MessageAgentThought
+from .account import Account, AccountOAuth
 
 __all__ = [
     "ApiTool",
@@ -22,4 +24,9 @@ __all__ = [
     "ProcessRule",
     "Segment",
     "UploadFile",
+    "Conversation",
+    "Message",
+    "MessageAgentThought",
+    "Account",
+    "AccountOAuth",
 ]

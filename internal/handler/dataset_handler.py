@@ -4,7 +4,13 @@ import inject
 from flask import request
 from werkzeug.datastructures import MultiDict
 
-from internal.entity import DOCUMENT_PROCESSING_STATUSES, ProcessType
+from internal.entity import (
+    DOCUMENT_PROCESSING_STATUSES,
+    DEFAULT_SCORE_THRESHOLD,
+    DEFAULT_TOP_K,
+    ProcessType,
+    RetrievalStrategy,
+)
 from internal.pkg.response import (
     fail_message,
     not_found_message,
@@ -27,6 +33,11 @@ from internal.schema.document_schema import (
     validate_custom_rule,
     validate_upload_file_ids,
 )
+from internal.schema.retrieval_schema import (
+    DatasetQuerySchema,
+    HitTestingReq,
+    RetrievalRecordSchema,
+)
 from internal.schema.segment_schema import (
     CreateSegmentReq,
     SegmentListReq,
@@ -34,8 +45,10 @@ from internal.schema.segment_schema import (
     UpdateSegmentReq,
     validate_segment_keywords,
 )
+from internal.service.dataset_query_service import DatasetQueryService
 from internal.service.dataset_service import DatasetService
 from internal.service.document_service import DocumentService
+from internal.service.retrieval_service import RetrievalService
 from internal.service.segment_service import SegmentService
 
 # TODO: 等待授权认证模块完成后再进行切换调整
@@ -50,6 +63,8 @@ class DatasetHandler:
     dataset_service: DatasetService
     document_service: DocumentService
     segment_service: SegmentService
+    retrieval_service: RetrievalService
+    dataset_query_service: DatasetQueryService
 
     def create_dataset(self):
         payload = request.get_json(silent=True) or {}
@@ -372,6 +387,82 @@ class DatasetHandler:
         except ValueError as e:
             return fail_message(str(e))
         return success_json({"id": str(segment_id)})
+
+
+    # ── 检索召回 ──────────────────────────────────────────────────
+
+    def hit_testing(self, dataset_id):
+        """召回测试：按检索策略召回片段，并记录本次查询。"""
+        dataset = self.dataset_service.get_by_id(dataset_id)
+        if dataset is None:
+            return not_found_message("知识库不存在")
+        payload = request.get_json(silent=True) or {}
+        form = HitTestingReq(formdata=MultiDict(payload))
+        if not form.validate():
+            return validate_error_json(form.errors)
+
+        top_k, error = self._parse_int(payload.get("k"), DEFAULT_TOP_K, 1, 100, "k")
+        if error:
+            return fail_message(error)
+        score, error = self._parse_float(
+            payload.get("score"), DEFAULT_SCORE_THRESHOLD, 0.0, 1.0, "score"
+        )
+        if error:
+            return fail_message(error)
+
+        strategy = form.retrieval_strategy.data or RetrievalStrategy.HYBRID
+        records = self.retrieval_service.hit_testing(
+            dataset_id=dataset_id,
+            query=form.query.data,
+            account_id=ACCOUNT_ID,
+            strategy=strategy,
+            top_k=top_k,
+            score_threshold=score,
+        )
+        return success_json(
+            {"records": RetrievalRecordSchema(many=True).dump(records)}
+        )
+
+    def get_dataset_queries(self, dataset_id):
+        """查询知识库最近的检索记录，默认返回 10 条。"""
+        dataset = self.dataset_service.get_by_id(dataset_id)
+        if dataset is None:
+            return not_found_message("知识库不存在")
+        limit, error = self._parse_int(
+            request.args.get("limit"), 10, 1, 50, "limit"
+        )
+        if error:
+            return fail_message(error)
+        queries = self.dataset_query_service.get_recent_by_dataset(dataset_id, limit)
+        return success_json(
+            {"queries": DatasetQuerySchema(many=True).dump(queries)}
+        )
+
+    @staticmethod
+    def _parse_int(raw, default, minimum, maximum, name):
+        """把请求里的整数参数安全转换并校验范围，返回 (值, 错误消息)。"""
+        if raw is None or raw == "":
+            return default, None
+        try:
+            value = int(raw)
+        except (TypeError, ValueError):
+            return None, f"{name}参数必须是整数"
+        if value < minimum or value > maximum:
+            return None, f"{name}参数的取值范围为{minimum}-{maximum}"
+        return value, None
+
+    @staticmethod
+    def _parse_float(raw, default, minimum, maximum, name):
+        """把请求里的浮点参数安全转换并校验范围，返回 (值, 错误消息)。"""
+        if raw is None or raw == "":
+            return default, None
+        try:
+            value = float(raw)
+        except (TypeError, ValueError):
+            return None, f"{name}参数必须是数字"
+        if value < minimum or value > maximum:
+            return None, f"{name}参数的取值范围为{minimum}-{maximum}"
+        return value, None
 
 
 __all__ = ["DatasetHandler"]

@@ -87,6 +87,10 @@ DEFAULT_CONFIG = {
         "CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP", "false"
     ).lower()
     == "true",
+    # 登录凭证配置：JWT 未单独配置密钥时复用 SECRET_KEY，默认有效期 30 天
+    "JWT_SECRET_KEY": os.getenv("JWT_SECRET_KEY", os.getenv("SECRET_KEY", "dev-secret-key")),
+    "JWT_ALGORITHM": os.getenv("JWT_ALGORITHM", "HS256"),
+    "JWT_EXPIRE_DAYS": int(os.getenv("JWT_EXPIRE_DAYS", "30")),
 }
 
 

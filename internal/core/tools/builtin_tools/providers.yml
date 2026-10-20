@@ -5,6 +5,13 @@
   background: "#E5E7EB"
   category: search
   created_at: 1722498386
+- name: gaode
+  label: 高德
+  description: 高德开放平台提供的天气查询等位置信息服务工具。
+  icon: icon.svg
+  background: "#E8F1FF"
+  category: search
+  created_at: 1722498386
 - name: other_tool
   label: 其它工具
   description: 示例与实验性质的工具提供商，用于验证新增服务商的接入流程。

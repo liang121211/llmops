@@ -54,6 +54,24 @@ class KeywordTableService(BaseService[KeywordTable]):
             kt.keyword_table = keyword_table
         return kt
 
+    def search_segments_by_keywords(
+        self, dataset_id: Any, keywords: list[str]
+    ) -> dict[str, list[str]]:
+        """按查询关键词在倒排表里检索，返回命中片段到命中关键词列表的映射。
+
+        只读不建表：知识库还没有关键词表时直接返回空。
+        命中数越多说明片段与查询的相关度越高，由上层换算成打分。
+        """
+        kt = self.get_first(KeywordTable.dataset_id == dataset_id)
+        if kt is None or not kt.keyword_table:
+            return {}
+        table = kt.keyword_table
+        matches: dict[str, list[str]] = {}
+        for keyword in keywords:
+            for segment_id in table.get(keyword, []):
+                matches.setdefault(segment_id, []).append(keyword)
+        return matches
+
     def add_segments_keywords(
         self, dataset_id: Any, keywords_map: dict[str, list[str]]
     ) -> None:
