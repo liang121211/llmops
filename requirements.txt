@@ -8,6 +8,7 @@ python-dotenv>=1.0.1
 psycopg[binary]>=3.2.0
 pytest>=8.0.0
 langchain>=0.3.0
+langchain-core>=1.6.0
 langgraph>=0.2.0
 Flask-Migrate>=4.1.0
 Flask-Login>=0.6.3
@@ -18,3 +19,21 @@ pydantic>=2.10
 requests>=2.32.0
 minio>=7.2.0
 cos-python-sdk-v5>=1.9.30
+# 异步任务与缓存锁：celery worker / broker、Redis 分布式锁
+# redis 上限锁在 6 以下：Retry(backoff, retries) 的入参在新版本有变动，与开发环境保持一致
+celery>=5.6.0
+redis>=5.3,<6
+# 向量库：flask-weaviate 扩展与 weaviate 客户端、langchain 向量存储适配
+flask-weaviate>=1.1.0
+weaviate-client>=4.23.0
+langchain-weaviate>=0.0.8
+# 大模型与嵌入：DeepSeek 走 openai 协议，嵌入模型用 sentence-transformers 本地推理
+langchain-openai>=1.6.0
+langchain-huggingface>=1.2.0
+sentence-transformers>=6.1.0
+huggingface-hub>=1.33.0
+# 文档分块与关键词提取
+langchain-text-splitters>=1.1.0
+jieba>=0.42.1
+# 文档加载：pdf/docx/xlsx/html/md/csv 等格式解析，需要 all-docs 附加依赖
+unstructured[all-docs]>=0.27.0

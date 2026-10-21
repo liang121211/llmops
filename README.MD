@@ -157,4 +157,51 @@ pi_heif unstructured_inference pdf2image
 - 在 app.py 请你初始化环境变量 dotenv
 ```
 
+```text
+## docker-compse容器编排
+### redis 编排需求:
+1、镜像使用:redis:6-alpine
+2、总是重启
+3、容器名:llmops-redis
+4、卷映射: ./volumes/redis:/data 
+5、启动时候需要密码，llmops123456
+6、健康检查 
+7、需要端口映射外网访问 
 
+### postgres编排需求:
+1、镜像使用:postgres:15-alpine 
+2、总是重启
+3、配置环境变量 用户是 postgres ， 密码是 llmops123456   数据路径 /var/lib/postgresql/data/pgdata
+4、卷标映射:将本地路径 ./volumes/db/data 映射到上面的数据路径 
+5、将本地初始化脚本   ./postgres/init.sql映射到/docker-entrypoint-initdb.d/init.sql路径 
+6、健康检查，每3秒一次，超时3s  重试 30次
+7、需要端口映射外网访问 
+
+### weaviate容器编排需求
+1、镜像使用:semitechnologies/weaviate:1.28.4
+2、容器名:llmops-weaviate
+3、总是重启
+4、配置环境变量 
+- 查询默认返回数据条数是 25 
+- 需要授权才能和weaviate 进行交互 
+- 数据存储路径是  /var/lib/weaviate 
+- 不需要向量化模块 
+- 节点的主机名字是'node1'
+- 启用基于API密钥的身份验证 
+- 允许的api密钥列表是 'ftBC9hKkjfdbdi0wW3T6kEtMh5BZFpGa1DF8'
+- 允许api密钥访问的用户列表是:'llmops@alltman.com'
+- 启动管理员列表授权 
+- 由管理员权限的 用户列表是:'llmops@alltman.com'
+5、卷标映射:将本地路径 ./volumes/weaviate 映射到上面的数据路径
+6、需要端口映射外网访问（http 和 grpc 都要） 
+
+### api容器编排需求 
+1、镜像使用:llmops-api:0.9.9.9
+2、容器名:llmops-api， 本地构建，构建路径是 ../ui, 编译文件是DockerFile 
+3、容器名称:llmops-api 
+4、总是重启
+5、配置环境变量留空 
+6、卷标映射，./volumes/app/storage:/app/api/storage
+7、端口:5001 且外网能访问 
+8、启动依赖: llmops-db  llmops-redis  llmops-weaviate
+```

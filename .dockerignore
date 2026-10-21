@@ -1,0 +1,37 @@
+# 本地虚拟环境与缓存：体积大且平台相关，镜像内由 pip 重新安装
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.mimocode/
+.qoder/
+.idea/
+.vscode/
+
+# 配置与密钥：镜像不打进 .env，运行时用 --env-file 或环境变量注入
+.env
+.env.*
+*.pem
+*.key
+
+# 版本库与文档
+.git/
+.gitignore
+.gitattributes
+docs/
+*.md
+*.MD
+
+# 运行期数据：日志、上传文件、嵌入模型权重都在容器里重新生成或挂卷
+storage/
+internal/embeddings/models--*/
+*.log
+
+# 构建文件本身不需要进镜像
+Dockerfile
+Dockerfile-unstructured
+.dockerignore
+docker/
