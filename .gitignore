@@ -176,3 +176,7 @@ internal/embeddings/models--*
 *.safetensors
 *.bin
 *.index
+# 密钥文件（绝不入库）
+.env
+.env.*
+!.env.example
